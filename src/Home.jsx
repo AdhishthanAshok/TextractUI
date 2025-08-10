@@ -60,7 +60,7 @@ export default function App() {
                 rectangles: updatedRectangles
             }
         };
-
+        // Calling the API
         try {
             const res = await fetch(`${baseUrl}/save-data`, {
                 method: 'POST',
