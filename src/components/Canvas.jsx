@@ -189,12 +189,6 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
         setResizeDirection(null);
     };
 
-    const handleDelete = (index) => {
-        setRectangles(prev => prev.filter((_, i) => i !== index));
-        // if selected was deleted, clear selection
-        if (selectedIndex === index) setSelectedIndex(null);
-    };
-
     return (
         <div className="w-full flex-1 p-4 flex items-start justify-center">
             <div
@@ -219,7 +213,6 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
                         key={i}
                         r={r}
                         index={i}
-                        onDelete={handleDelete}
                         onMouseDown={(e, idx, direction) => {
                             const pos = getRelativePos(e);
                             setSelectedIndex(idx);

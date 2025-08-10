@@ -14,31 +14,66 @@ export default function EntityValueTable({ data }) {
     }, [rectData]);
 
     return (
-        <div className="max-w-4xl mx-auto mt-8 bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
-            <div className="px-6 py-4 bg-gradient-to-r from-indigo-100 to-indigo-50 border-b border-gray-200">
-                <h3 className="text-2xl font-semibold text-gray-800">📋 Extracted Entity Values</h3>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-indigo-700">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-white">Extracted Results</h3>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        {rectData.length} {rectData.length === 1 ? "entity" : "entities"}
+                    </span>
+                </div>
             </div>
 
+            {/* Table */}
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left font-medium">Entity Name</th>
-                            <th className="px-6 py-3 text-left font-medium">Extracted Value</th>
+                            <th
+                                scope="col"
+                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Entity
+                            </th>
+                            <th
+                                scope="col"
+                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Extracted Value
+                            </th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
+                    <tbody className="bg-white divide-y divide-gray-200">
                         {rectData.length > 0 ? (
                             rectData.map((r) => (
-                                <tr key={r.id} className="hover:bg-indigo-50 transition duration-150">
-                                    <td className="px-6 py-4 font-medium text-gray-800">{r.name}</td>
-                                    <td className="px-6 py-4 text-gray-600">{r.value}</td>
+                                <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center">
+                                            <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-semibold">
+                                                {r.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="ml-4">
+                                                <div className="text-sm font-medium text-gray-900">{r.name}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
+                                            {r.value || (
+                                                <span className="text-gray-400">No value detected</span>
+                                            )}
+                                        </div>
+                                    </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="2" className="px-6 py-4 text-center text-gray-500">
-                                    No data available.
+                                <td
+                                    colSpan="2"
+                                    className="px-6 py-4 text-center text-sm text-gray-500"
+                                >
+                                    No entities processed yet. Upload an image and click "Process Image" to extract data.
                                 </td>
                             </tr>
                         )}
@@ -47,4 +82,5 @@ export default function EntityValueTable({ data }) {
             </div>
         </div>
     );
+
 }

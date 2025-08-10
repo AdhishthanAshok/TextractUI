@@ -81,7 +81,6 @@ export default function App() {
                 backdrop: true,
 
             }).then(() => {
-                // ✅ Let browser settle (important)
                 setTimeout(() => {
                     tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 200);
@@ -111,49 +110,80 @@ export default function App() {
             confirmButtonText: 'Yes, clear all'
         }).then((result) => {
             if (result.isConfirmed) {
-                setRectangles([]);
-                setSelectedIndex(null);
-                Swal.fire('Cleared!', 'All rectangles have been removed.', 'success');
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: 'Your entitits have been removed!',
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        setRectangles([]);
+                        setSelectedIndex(null);
+                    },
+                });
             }
         });
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white text-gray-800">
-            <Toolbar
-                onUpload={handleUpload}
-                drawEnabled={drawEnabled}
-                onToggleDraw={() => setDrawEnabled(p => !p)}
-                onSubmit={handleSubmit}
-                onClearAll={handleClearAll}
-                rectCount={rectangles.length}
-                imageType={imageType}
-                setImageType={setImageType}
-                onTogglePeek={() => setIsPeekActive(p => !p)}
-                isPeekActive={isPeekActive}
-            />
-
-            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_280px] gap-4 py-6 px-4">
-                <Canvas
-                    imageBase64={imageBase64}
-                    rectangles={rectangles}
-                    setRectangles={setRectangles}
-                    drawEnabled={drawEnabled}
-                    setSelectedIndex={setSelectedIndex}
-                    selectedIndex={selectedIndex}
-                    isPeekActive={isPeekActive}
-                />
-
-                <PropertiesPanel selectedIndex={selectedIndex} rectangles={rectangles} setRectangles={setRectangles} />
-
-                <div ref={tableRef}>
-                    {tableData && (
-                        <EntityValueTable
-                            data={tableData}
-                        />
-                    )}
+        <div className="min-h-screen bg-gray-50 text-gray-800">
+            {/* Header */}
+            <header className="bg-white shadow-sm border-b">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <Toolbar
+                        onUpload={handleUpload}
+                        drawEnabled={drawEnabled}
+                        onToggleDraw={() => setDrawEnabled(prev => !prev)}
+                        onSubmit={handleSubmit}
+                        onClearAll={handleClearAll}
+                        rectCount={rectangles.length}
+                        imageType={imageType}
+                        setImageType={setImageType}
+                        onTogglePeek={() => setIsPeekActive(prev => !prev)}
+                        isPeekActive={isPeekActive}
+                    />
                 </div>
-            </div>
+            </header>
+
+            {/* Main content */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Canvas Section */}
+                    <section className="lg:w-3/4 w-full">
+                        <Canvas
+                            imageBase64={imageBase64}
+                            rectangles={rectangles}
+                            setRectangles={setRectangles}
+                            drawEnabled={drawEnabled}
+                            setSelectedIndex={setSelectedIndex}
+                            selectedIndex={selectedIndex}
+                            isPeekActive={isPeekActive}
+                        />
+                    </section>
+
+                    {/* Properties Panel */}
+                    <aside className="lg:w-1/4 w-full">
+                        <PropertiesPanel
+                            selectedIndex={selectedIndex}
+                            rectangles={rectangles}
+                            setRectangles={setRectangles}
+                            setSelectedIndex={setSelectedIndex}
+
+                        />
+                    </aside>
+                </div>
+
+                {/* Results Table */}
+                {tableData && (
+                    <section ref={tableRef}>
+                        <EntityValueTable data={tableData} />
+                    </section>
+                )}
+            </main>
         </div>
     );
+
 }
