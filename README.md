@@ -4,7 +4,8 @@ TextractUI is an intelligent document processing app that uses OCR (Optical Char
 
 ### 🔑 Key Features
 - ✅ **Multi-Format Support**: Process PDFs, scanned forms, screenshots, and UI-based inputs.
-- ✍️ **Handwriting Recognition (ICR)**: Extract handwritten text using AI models.
+- ✍️ **Handwriting Recognition (ICR)**: Extract handwritten text using AI models.  
+  <img src="https://miro.medium.com/v2/resize:fit:1100/format:webp/1*hVxkXe35kRcAht3QpJylyg.gif" width="400" alt="Handwriting OCR demo"/>
 - 📊 **Structured Output**: Export form data as JSON, CSV, or directly to a database.
 - 🧠 **AI-Enhanced Backend**: Powered by OpenCV, Tesseract, and optional ML/ICR via PyTorch.
 
