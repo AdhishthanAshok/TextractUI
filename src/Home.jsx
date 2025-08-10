@@ -16,7 +16,7 @@ export default function App() {
     const [isPeekActive, setIsPeekActive] = useState(false);
     const [tableData, setTableData] = useState(null);
     const tableRef = useRef(null);
-
+    const baseUrl = import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL;
 
     useEffect(() => {
         if (tableData) {
@@ -62,7 +62,7 @@ export default function App() {
         };
 
         try {
-            const res = await fetch('http://localhost:3000/save-data', {
+            const res = await fetch(`${baseUrl}/save-data`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
