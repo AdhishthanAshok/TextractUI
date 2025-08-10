@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Rectangle({ r, index, onDelete, onMouseDown, isSelected }) {
+export default function Rectangle({ r, index, onMouseDown, isSelected }) {
     const borderColor = isSelected ? 'rgba(6,182,212,1)' : 'rgba(239,68,68,1)';
     const shadow = isSelected ? '0 0 0 6px rgba(6,182,212,0.08)' : 'none';
 
@@ -22,37 +22,12 @@ export default function Rectangle({ r, index, onDelete, onMouseDown, isSelected 
                 cursor: 'move',
             }}
         >
-            {/* index badge */}
-            <div style={{ position: 'absolute', left: 6, top: 6 }}>
-                <div className="text-xs px-2 py-0.5 bg-white/80 rounded-full border">#{index + 1}</div>
+            {/* Index badge moved to delete button's position */}
+            <div style={{ position: 'absolute', left: '50%', top: -10, transform: 'translateX(-50%)', }}
+                className="text-xs px-2 py-0.5 bg-white/80 rounded-full border" >
+                #{index + 1}
             </div>
 
-            {/* delete button */}
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(index);
-                }}
-                style={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: -10,
-                    transform: 'translateX(-50%)',
-                    width: 22,
-                    height: 22,
-                    borderRadius: 9999,
-                    background: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer'
-                }}
-                title="Delete rectangle"
-            >
-                ×
-            </button>
             <div
                 onMouseDown={(e) => {
                     e.stopPropagation();
