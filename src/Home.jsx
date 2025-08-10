@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Toolbar from './components/Toolbar';
 import Canvas from './components/Canvas';
 import PropertiesPanel from './components/PropertiesPanel';
 import { fileToDataUrl } from './utils/imageUtils';
-import { v4 as uuidv4 } from 'uuid';
+import EntityValueTable from "./components/EntityValueTable";
+// import { v4 as uuidv4 } from 'uuid';
+import Swal from 'sweetalert2';
 
 export default function App() {
     const [imageBase64, setImageBase64] = useState(null);
     const [rectangles, setRectangles] = useState([]);
     const [drawEnabled, setDrawEnabled] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(null);
-    const [imageType, setImageType] = useState("normal");
+    const [imageType, setImageType] = useState("select");
+    const [isPeekActive, setIsPeekActive] = useState(false);
+    const [tableData, setTableData] = useState(null);
+    const tableRef = useRef(null);
+
+
+    useEffect(() => {
+        if (tableData) {
+            tableRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [tableData]);
 
     const handleUpload = async (file) => {
         const dataUrl = await fileToDataUrl(file);
@@ -20,7 +32,22 @@ export default function App() {
     };
 
     const handleSubmit = async () => {
-        if (!imageBase64 || rectangles.length === 0) return alert('Please upload an image and draw at least one rectangle.');
+        if (!imageBase64 || rectangles.length === 0) {
+            return Swal.fire({
+                icon: 'warning',
+                title: 'Missing Data',
+                text: 'Please upload an image and draw at least one rectangle.',
+            });
+        }
+
+        // Ensure all rectangles have names
+        const updatedRectangles = rectangles.map((rect, index) => ({
+            ...rect,
+            name: rect.name?.trim() ? rect.name : `Entity ${index + 1}`
+        }));
+
+        // Update state so UI also reflects the default names
+        setRectangles(updatedRectangles);
 
         const payload = {
             message: "Data Fetched",
@@ -30,7 +57,7 @@ export default function App() {
                     image_base_64: imageBase64.split(',')[1],
                     image_type: imageType
                 },
-                rectangles
+                rectangles: updatedRectangles
             }
         };
 
@@ -40,18 +67,55 @@ export default function App() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+
             const data = await res.json();
+            setTableData(data);
             console.log('Server response:', data);
-            alert('Submitted successfully');
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Submitted successfully',
+                returnFocus: false,      // Prevents focus shifting back
+                heightAuto: false,       // Helps avoid repositioning issues
+                backdrop: true,
+
+            }).then(() => {
+                // ✅ Let browser settle (important)
+                setTimeout(() => {
+                    tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 200);
+            });
+
         } catch (err) {
             console.error(err);
-            alert('Error sending data to backend');
+            Swal.fire({
+                icon: 'error',
+                title: 'Submission Failed',
+                text: 'Error sending data to backend',
+            });
         }
     };
 
+
+
     const handleClearAll = () => {
-        setRectangles([]);
-        setSelectedIndex(null);
+        if (rectangles.length === 0) return;
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This will remove all drawn rectangles.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, clear all'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                setRectangles([]);
+                setSelectedIndex(null);
+                Swal.fire('Cleared!', 'All rectangles have been removed.', 'success');
+            }
+        });
     };
 
     return (
@@ -65,6 +129,8 @@ export default function App() {
                 rectCount={rectangles.length}
                 imageType={imageType}
                 setImageType={setImageType}
+                onTogglePeek={() => setIsPeekActive(p => !p)}
+                isPeekActive={isPeekActive}
             />
 
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_280px] gap-4 py-6 px-4">
@@ -75,9 +141,18 @@ export default function App() {
                     drawEnabled={drawEnabled}
                     setSelectedIndex={setSelectedIndex}
                     selectedIndex={selectedIndex}
+                    isPeekActive={isPeekActive}
                 />
 
-                <PropertiesPanel selectedIndex={selectedIndex} rectangles={rectangles} />
+                <PropertiesPanel selectedIndex={selectedIndex} rectangles={rectangles} setRectangles={setRectangles} />
+
+                <div ref={tableRef}>
+                    {tableData && (
+                        <EntityValueTable
+                            data={tableData}
+                        />
+                    )}
+                </div>
             </div>
         </div>
     );

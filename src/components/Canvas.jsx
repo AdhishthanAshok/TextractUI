@@ -3,7 +3,7 @@ import Rectangle from './Rectangle';
 import { v4 as uuidv4 } from 'uuid';
 
 
-export default function Canvas({ imageBase64, rectangles, setRectangles, drawEnabled, setSelectedIndex, selectedIndex }) {
+export default function Canvas({ imageBase64, rectangles, setRectangles, drawEnabled, setSelectedIndex, selectedIndex, isPeekActive }) {
     const containerRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [startPoint, setStartPoint] = useState(null);
@@ -12,7 +12,6 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
     const [dragOffset, setDragOffset] = useState(null);
     const [isResizing, setIsResizing] = useState(false);
     const [resizeDirection, setResizeDirection] = useState(null);
-
 
     // keep refs so global mouseup can access latest values
     const currentRectRef = useRef(currentRect);
@@ -25,10 +24,18 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
         const handleWindowMouseUp = () => {
             if (isDrawingRef.current && currentRectRef.current) {
                 setRectangles(prev => {
-                    const newRects = [...prev, { id: uuidv4(), ...currentRectRef.current }];
+                    const newRects = [
+                        ...prev,
+                        {
+                            id: uuidv4(),
+                            name: `Entity ${prev.length + 1}`,
+                            ...currentRectRef.current
+                        }
+                    ];
                     setSelectedIndex(newRects.length - 1);
                     return newRects;
                 });
+
             }
             setIsDrawing(false);
             setStartPoint(null);
@@ -207,7 +214,7 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
                 )}
 
                 {/* existing rectangles */}
-                {rectangles.map((r, i) => (
+                {!isPeekActive && rectangles.map((r, i) => (
                     <Rectangle
                         key={i}
                         r={r}
