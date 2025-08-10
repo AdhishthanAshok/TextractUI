@@ -8,7 +8,9 @@ export default function Toolbar({
     onClearAll,
     rectCount,
     imageType,
-    setImageType
+    setImageType,
+    onTogglePeek,
+    isPeekActive
 }) {
     return (
         <div className="w-full flex flex-col md:flex-row gap-3 md:items-center md:justify-between p-4 bg-white/80 border-b border-gray-200">
@@ -19,9 +21,11 @@ export default function Toolbar({
                     onChange={(e) => setImageType(e.target.value)}
                     className="border rounded px-2 py-1"
                 >
+                    <option value="select" disabled>Image Type</option>
                     <option value="normal">Normal</option>
                     <option value="sketch">Sketch</option>
                 </select>
+
 
                 <label className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded cursor-pointer">
                     <input
@@ -42,7 +46,7 @@ export default function Toolbar({
                     onClick={onToggleDraw}
                     className={`px-3 py-2 rounded font-medium transition ${drawEnabled ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white'}`}
                 >
-                    {drawEnabled ? 'Disable Drawing' : 'Enable Drawing'}
+                    {drawEnabled ? 'Diasble Entity' : 'Add Entity'}
                 </button>
 
                 <button
@@ -50,6 +54,14 @@ export default function Toolbar({
                     className="px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 border"
                 >
                     Clear All
+                </button>
+
+                {/* Peek Button */}
+                <button
+                    onClick={onTogglePeek}
+                    className={`px-3 py-2 rounded font-medium transition ${isPeekActive ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-yellow-300 hover:bg-yellow-400 text-black'}`}
+                >
+                    {isPeekActive ? 'Unpeek' : 'Peek'}
                 </button>
             </div>
 
@@ -59,7 +71,7 @@ export default function Toolbar({
                     onClick={onSubmit}
                     className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
                 >
-                    Submit
+                    Read
                 </button>
             </div>
         </div>
