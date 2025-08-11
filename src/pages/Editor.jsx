@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Toolbar from './components/Toolbar';
-import Canvas from './components/Canvas';
-import PropertiesPanel from './components/PropertiesPanel';
-import { fileToDataUrl } from './utils/imageUtils';
-import EntityValueTable from "./components/EntityValueTable";
+import Toolbar from '../components/Toolbar';
+import Canvas from '../components/Canvas';
+import PropertiesPanel from '../components/PropertiesPanel';
+import { fileToDataUrl } from '../utils/imageUtils';
+import EntityValueTable from "../components/EntityValueTable";
 // import { v4 as uuidv4 } from 'uuid';
 import Swal from 'sweetalert2';
 
 export default function App() {
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
     const [imageBase64, setImageBase64] = useState(null);
     const [rectangles, setRectangles] = useState([]);
     const [drawEnabled, setDrawEnabled] = useState(true);
