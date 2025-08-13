@@ -11,7 +11,8 @@ export default function Toolbar({
     imageType,
     setImageType,
     onTogglePeek,
-    isPeekActive
+    isPeekActive,
+    onDetectEntities
 }) {
     const fileInputRef = useRef(null);
 
@@ -34,6 +35,12 @@ export default function Toolbar({
         if (!file) return;
         onUpload(file);
         e.target.value = null; // Clear file input
+    };
+
+    const handleDetectEntity = () => {
+        if (typeof onDetectEntities === "function") {
+            onDetectEntities();
+        }
     };
 
     return (
@@ -116,6 +123,12 @@ export default function Toolbar({
                         <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                     </svg>
                     {isPeekActive ? 'Unpeek' : 'Peek'}
+                </button>
+                <button
+                    onClick={handleDetectEntity}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 transition-colors"
+                >
+                    Detect Entities
                 </button>
             </div>
 

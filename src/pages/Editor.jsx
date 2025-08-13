@@ -7,7 +7,7 @@ import EntityValueTable from "../components/EntityValueTable";
 // import { v4 as uuidv4 } from 'uuid';
 import Swal from 'sweetalert2';
 
-export default function App() {
+const Editor = () => {
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, []);
@@ -131,6 +131,46 @@ export default function App() {
         });
     };
 
+    const handleDetectEntities = async () => {
+        try {
+            // Assuming you already have imageBase64 in parent and passed it as a prop
+            if (!imageBase64) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "No Image",
+                    text: "Please upload an image first."
+                });
+                return;
+            }
+
+            const res = await fetch(`${baseUrl}/detect-entities`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: imageBase64 })
+            });
+
+            const data = await res.json();
+            if (!data.status) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: data.message || "Detection failed"
+                });
+                return;
+            }
+
+            setRectangles(data.rectangles); // Pass to parent
+        } catch (err) {
+            console.error(err);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Something went wrong while detecting entities."
+            });
+        }
+    }
+
+
     return (
         <div className="min-h-screen bg-gray-50 text-gray-800">
             {/* Header */}
@@ -147,6 +187,8 @@ export default function App() {
                         setImageType={setImageType}
                         onTogglePeek={() => setIsPeekActive(prev => !prev)}
                         isPeekActive={isPeekActive}
+                        imageBase64={imageBase64}
+                        onDetectEntities={handleDetectEntities}
                     />
                 </div>
             </header>
@@ -168,7 +210,7 @@ export default function App() {
                     </section>
 
                     {/* Properties Panel */}
-                    <aside className="lg:w-1/4 w-full">
+                    <aside className="lg:w-1/4 w-full sticky top-24 self-start">
                         <PropertiesPanel
                             selectedIndex={selectedIndex}
                             rectangles={rectangles}
@@ -188,5 +230,7 @@ export default function App() {
             </main>
         </div>
     );
+};
 
-}
+
+export default Editor;
