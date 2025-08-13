@@ -51,7 +51,7 @@ export default function PropertiesPanel({ selectedIndex, rectangles, setRectangl
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-full sticky">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-full">
             {/* Header */}
             <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
                 <h3 className="text-lg font-medium text-gray-900">Entity Properties</h3>

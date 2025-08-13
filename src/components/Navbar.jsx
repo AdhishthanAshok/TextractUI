@@ -7,10 +7,10 @@ export default function Navbar() {
 
     const navItems = [
         { name: 'Home', path: '/' },
-        { name: 'About Us', path: '/about' },
+        { name: 'Docs', path: '/docs' },
         { name: 'Pricing', path: '/pricing' },
-        { name: 'Support', path: '/support' },
         { name: 'Contact', path: '/contact' },
+        { name: 'Try Editor!', path: '/editor' },
     ];
 
     // Placeholder function for theme toggle - you'll implement this later
