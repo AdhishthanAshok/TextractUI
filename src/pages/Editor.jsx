@@ -4,13 +4,13 @@ import Canvas from '../components/Canvas';
 import PropertiesPanel from '../components/PropertiesPanel';
 import { fileToDataUrl } from '../utils/imageUtils';
 import EntityValueTable from "../components/EntityValueTable";
-// import { v4 as uuidv4 } from 'uuid';
 import Swal from 'sweetalert2';
 
 const Editor = () => {
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, []);
+
     const [imageBase64, setImageBase64] = useState(null);
     const [rectangles, setRectangles] = useState([]);
     const [drawEnabled, setDrawEnabled] = useState(true);
@@ -18,6 +18,7 @@ const Editor = () => {
     const [imageType, setImageType] = useState("select");
     const [isPeekActive, setIsPeekActive] = useState(false);
     const [tableData, setTableData] = useState(null);
+    const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
     const tableRef = useRef(null);
     const baseUrl = import.meta.env.VITE_REACT_APP_BACKEND_BASE_URL;
 
@@ -32,6 +33,39 @@ const Editor = () => {
         setImageBase64(dataUrl);
         setRectangles([]);
         setSelectedIndex(null);
+
+        // Get natural image dimensions
+        const img = new Image();
+        img.src = dataUrl;
+        img.onload = () => {
+            setImageNaturalSize({
+                width: img.naturalWidth,
+                height: img.naturalHeight
+            });
+        };
+    };
+
+    // Convert relative coordinates to actual pixel coordinates
+    const convertToActualPixels = (relativeRect) => {
+        return {
+            id: relativeRect.id,
+            name: relativeRect.name,
+            x1: Math.round(relativeRect.x1 * imageNaturalSize.width),
+            y1: Math.round(relativeRect.y1 * imageNaturalSize.height),
+            x2: Math.round(relativeRect.x2 * imageNaturalSize.width),
+            y2: Math.round(relativeRect.y2 * imageNaturalSize.height),
+            width: Math.round(relativeRect.width * imageNaturalSize.width),
+            height: Math.round(relativeRect.height * imageNaturalSize.height),
+            // Keep relative coordinates for internal use
+            // relative: {
+            //     x1: relativeRect.x1,
+            //     y1: relativeRect.y1,
+            //     x2: relativeRect.x2,
+            //     y2: relativeRect.y2,
+            //     width: relativeRect.width,
+            //     height: relativeRect.height
+            // }
+        };
     };
 
     const handleSubmit = async () => {
@@ -43,26 +77,36 @@ const Editor = () => {
             });
         }
 
-        // Ensure all rectangles have names
-        const updatedRectangles = rectangles.map((rect, index) => ({
-            ...rect,
-            name: rect.name?.trim() ? rect.name : `Entity ${index + 1}`
-        }));
+        // Ensure all rectangles have names and convert to actual pixels
+        const updatedRectangles = rectangles.map((rect, index) => {
+            const rectWithName = {
+                ...rect,
+                name: rect.name?.trim() ? rect.name : `Entity ${index + 1}`
+            };
+            return convertToActualPixels(rectWithName);
+        });
 
         // Update state so UI also reflects the default names
-        setRectangles(updatedRectangles);
+        setRectangles(rectangles.map((rect, index) => ({
+            ...rect,
+            name: rect.name?.trim() ? rect.name : `Entity ${index + 1}`
+        })));
 
         const payload = {
-            message: "Data Fetched",
-            status: true,
             data: {
                 image: {
                     image_base_64: imageBase64.split(',')[1],
-                    image_type: imageType
+                    image_type: imageType,
+                    natural_width: imageNaturalSize.width,
+                    natural_height: imageNaturalSize.height
                 },
                 rectangles: updatedRectangles
             }
         };
+
+        // Log the payload to see the actual pixel coordinates being sent
+        console.log('Sending payload with actual pixel coordinates:', JSON.stringify(payload));
+
         // Calling the API
         try {
             const res = await fetch(`${baseUrl}/save-data`, {
@@ -79,10 +123,9 @@ const Editor = () => {
                 icon: 'success',
                 title: 'Success',
                 text: 'Submitted successfully',
-                returnFocus: false,      // Prevents focus shifting back
-                heightAuto: false,       // Helps avoid repositioning issues
+                returnFocus: false,
+                heightAuto: false,
                 backdrop: true,
-
             }).then(() => {
                 setTimeout(() => {
                     tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -98,8 +141,6 @@ const Editor = () => {
             });
         }
     };
-
-
 
     const handleClearAll = () => {
         if (rectangles.length === 0) return;
@@ -118,7 +159,7 @@ const Editor = () => {
                     position: 'top-end',
                     icon: 'success',
                     title: 'Deleted!',
-                    text: 'Your entitits have been removed!',
+                    text: 'Your entities have been removed!',
                     showConfirmButton: false,
                     timer: 1500,
                     timerProgressBar: true,
@@ -133,7 +174,6 @@ const Editor = () => {
 
     const handleDetectEntities = async () => {
         try {
-            // Assuming you already have imageBase64 in parent and passed it as a prop
             if (!imageBase64) {
                 Swal.fire({
                     icon: "warning",
@@ -146,7 +186,10 @@ const Editor = () => {
             const res = await fetch(`${baseUrl}/detect-entities`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ image: imageBase64 })
+                body: JSON.stringify({
+                    image: imageBase64,
+                    image_dimensions: imageNaturalSize
+                })
             });
 
             const data = await res.json();
@@ -159,7 +202,7 @@ const Editor = () => {
                 return;
             }
 
-            setRectangles(data.rectangles); // Pass to parent
+            setRectangles(data.rectangles);
         } catch (err) {
             console.error(err);
             Swal.fire({
@@ -168,8 +211,7 @@ const Editor = () => {
                 text: "Something went wrong while detecting entities."
             });
         }
-    }
-
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-800">
@@ -216,7 +258,7 @@ const Editor = () => {
                             rectangles={rectangles}
                             setRectangles={setRectangles}
                             setSelectedIndex={setSelectedIndex}
-
+                            imageNaturalSize={imageNaturalSize}
                         />
                     </aside>
                 </div>
@@ -231,6 +273,5 @@ const Editor = () => {
         </div>
     );
 };
-
 
 export default Editor;

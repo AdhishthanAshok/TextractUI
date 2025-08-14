@@ -8,6 +8,7 @@ export default function Rectangle({ r, index, onMouseDown, isSelected }) {
         <div
             onMouseDown={(e) => {
                 e.stopPropagation();
+                e.preventDefault(); // Added for consistency with Canvas
                 onMouseDown(e, index);
             }}
             style={{
@@ -22,16 +23,25 @@ export default function Rectangle({ r, index, onMouseDown, isSelected }) {
                 cursor: 'move',
             }}
         >
-            {/* Index badge moved to delete button's position */}
-            <div style={{ position: 'absolute', left: '50%', top: -10, transform: 'translateX(-50%)', }}
-                className="text-xs px-2 py-0.5 bg-white/80 rounded-full border" >
+            {/* Index badge */}
+            <div
+                style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: -10,
+                    transform: 'translateX(-50%)',
+                }}
+                className="text-xs px-2 py-0.5 bg-white/80 rounded-full border pointer-events-none"
+            >
                 #{index + 1}
             </div>
 
+            {/* Southeast corner */}
             <div
                 onMouseDown={(e) => {
                     e.stopPropagation();
-                    onMouseDown(e, index, 'se'); // southeast corner
+                    e.preventDefault(); // Added for consistency
+                    onMouseDown(e, index, 'se');
                 }}
                 style={{
                     position: 'absolute',
@@ -44,10 +54,13 @@ export default function Rectangle({ r, index, onMouseDown, isSelected }) {
                     cursor: 'se-resize'
                 }}
             />
+
+            {/* Northeast corner */}
             <div
                 onMouseDown={(e) => {
                     e.stopPropagation();
-                    onMouseDown(e, index, 'ne'); // northeast corner
+                    e.preventDefault(); // Added for consistency
+                    onMouseDown(e, index, 'ne');
                 }}
                 style={{
                     position: 'absolute',
@@ -60,11 +73,13 @@ export default function Rectangle({ r, index, onMouseDown, isSelected }) {
                     cursor: 'ne-resize'
                 }}
             />
+
             {/* Southwest corner */}
             <div
                 onMouseDown={(e) => {
                     e.stopPropagation();
-                    onMouseDown(e, index, 'sw'); // southwest corner
+                    e.preventDefault(); // Added for consistency
+                    onMouseDown(e, index, 'sw');
                 }}
                 style={{
                     position: 'absolute',
@@ -82,7 +97,8 @@ export default function Rectangle({ r, index, onMouseDown, isSelected }) {
             <div
                 onMouseDown={(e) => {
                     e.stopPropagation();
-                    onMouseDown(e, index, 'nw'); // northwest corner
+                    e.preventDefault(); // Added for consistency
+                    onMouseDown(e, index, 'nw');
                 }}
                 style={{
                     position: 'absolute',
@@ -95,7 +111,6 @@ export default function Rectangle({ r, index, onMouseDown, isSelected }) {
                     cursor: 'nw-resize'
                 }}
             />
-
         </div>
     );
 }
