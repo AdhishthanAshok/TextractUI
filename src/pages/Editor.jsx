@@ -57,14 +57,14 @@ const Editor = () => {
             width: Math.round(relativeRect.width * imageNaturalSize.width),
             height: Math.round(relativeRect.height * imageNaturalSize.height),
             // Keep relative coordinates for internal use
-            relative: {
-                x1: relativeRect.x1,
-                y1: relativeRect.y1,
-                x2: relativeRect.x2,
-                y2: relativeRect.y2,
-                width: relativeRect.width,
-                height: relativeRect.height
-            }
+            // relative: {
+            //     x1: relativeRect.x1,
+            //     y1: relativeRect.y1,
+            //     x2: relativeRect.x2,
+            //     y2: relativeRect.y2,
+            //     width: relativeRect.width,
+            //     height: relativeRect.height
+            // }
         };
     };
 
@@ -93,8 +93,6 @@ const Editor = () => {
         })));
 
         const payload = {
-            message: "Data Fetched",
-            status: true,
             data: {
                 image: {
                     image_base_64: imageBase64.split(',')[1],
@@ -107,7 +105,7 @@ const Editor = () => {
         };
 
         // Log the payload to see the actual pixel coordinates being sent
-        console.log('Sending payload with actual pixel coordinates:', payload);
+        console.log('Sending payload with actual pixel coordinates:', JSON.stringify(payload));
 
         // Calling the API
         try {

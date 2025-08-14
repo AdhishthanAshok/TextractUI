@@ -339,7 +339,7 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
             </div>
 
             {/* Debug info - you can remove this in production */}
-            {selectedIndex !== null && rectangles[selectedIndex] && (
+            {/* {selectedIndex !== null && rectangles[selectedIndex] && (
                 <div className="fixed bottom-4 right-4 bg-black text-white p-2 rounded text-xs max-w-xs">
                     <div>Selected Rectangle #{selectedIndex + 1}</div>
                     <div>Relative: ({rectangles[selectedIndex].x1.toFixed(3)}, {rectangles[selectedIndex].y1.toFixed(3)}) to ({rectangles[selectedIndex].x2.toFixed(3)}, {rectangles[selectedIndex].y2.toFixed(3)})</div>
@@ -351,7 +351,7 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
                     </div>
                     <div>Image: {imgSize.naturalWidth}x{imgSize.naturalHeight} → {Math.round(imgSize.displayWidth)}x{Math.round(imgSize.displayHeight)}</div>
                 </div>
-            )}
+            )} */}
         </div>
     );
 }

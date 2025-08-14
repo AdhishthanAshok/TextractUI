@@ -9,6 +9,8 @@ import Pricing from './pages/Pricing';
 import Support from './pages/Support';
 import Footer from './components/Footer';
 import Documentation from './pages/Documentation';
+import Auth from "./pages/Auth";
+import Dashboard from './pages/Dashboard';
 
 export default function App() {
   return (
@@ -22,6 +24,8 @@ export default function App() {
         <Route path="/support" element={<Support />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/docs" element={<Documentation />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
       <Footer />
     </Router>

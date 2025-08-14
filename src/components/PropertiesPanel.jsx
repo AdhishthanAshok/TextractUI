@@ -156,11 +156,11 @@ export default function PropertiesPanel({ selectedIndex, rectangles, setRectangl
                             {/* Image Info */}
                             {imageNaturalSize && (
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-600 uppercase tracking-wider mb-1">
-                                        Image Size
+                                    <label className="block text-xs font-medium text-gray-600 tracking-wider mb-1">
+                                        IMAGE SIZE (in px)
                                     </label>
                                     <div className="font-mono text-sm bg-green-50 px-1 py-2 rounded border text-center">
-                                        Width: {imageNaturalSize.width} | Height: {imageNaturalSize.height} px
+                                        Width: {imageNaturalSize.width} | Height: {imageNaturalSize.height}
                                     </div>
                                 </div>
                             )}
