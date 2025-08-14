@@ -4,19 +4,20 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default function Canvas({ imageBase64, rectangles, setRectangles, drawEnabled, setSelectedIndex, selectedIndex, isPeekActive }) {
     const containerRef = useRef(null);
+    const imgRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [startPoint, setStartPoint] = useState(null);
     const [currentRect, setCurrentRect] = useState(null);
     const [draggingIndex, setDraggingIndex] = useState(null);
-    const [dragOffset, setDragOffset] = useState(null); // relative offset
+    const [dragOffset, setDragOffset] = useState(null);
     const [isResizing, setIsResizing] = useState(false);
     const [resizeDirection, setResizeDirection] = useState(null);
 
     const [imgSize, setImgSize] = useState({
         naturalWidth: 0,
         naturalHeight: 0,
-        width: 0,
-        height: 0
+        displayWidth: 0,
+        displayHeight: 0
     });
 
     // refs to keep latest values
@@ -26,7 +27,7 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
     useEffect(() => { currentRectRef.current = currentRect; }, [currentRect]);
     useEffect(() => { isDrawingRef.current = isDrawing; }, [isDrawing]);
 
-    // Load natural size of image
+    // Load natural size of image and update display size
     useEffect(() => {
         if (imageBase64) {
             const img = new Image();
@@ -37,36 +38,70 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
                     naturalWidth: img.naturalWidth,
                     naturalHeight: img.naturalHeight
                 }));
-                updateRenderedSize();
+                // Update display size after natural size is loaded
+                setTimeout(updateDisplaySize, 0);
             };
         }
     }, [imageBase64]);
 
-    // Update rendered image size
-    const updateRenderedSize = () => {
-        if (containerRef.current) {
-            const bounds = containerRef.current.getBoundingClientRect();
+    // Update display size of the image
+    const updateDisplaySize = () => {
+        if (imgRef.current) {
+            const rect = imgRef.current.getBoundingClientRect();
             setImgSize(prev => ({
                 ...prev,
-                width: bounds.width,
-                height: bounds.height
+                displayWidth: rect.width,
+                displayHeight: rect.height
             }));
         }
     };
 
     useEffect(() => {
-        window.addEventListener("resize", updateRenderedSize);
-        return () => window.removeEventListener("resize", updateRenderedSize);
+        const handleResize = () => {
+            setTimeout(updateDisplaySize, 100);
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    // Get relative position (0–1)
+    // Get relative position (0–1) based on image bounds
     const getRelativePos = (e) => {
-        const bounds = containerRef.current.getBoundingClientRect();
-        let x = (e.clientX - bounds.left) / bounds.width;
-        let y = (e.clientY - bounds.top) / bounds.height;
+        if (!imgRef.current) return { x: 0, y: 0 };
+
+        const imgBounds = imgRef.current.getBoundingClientRect();
+        let x = (e.clientX - imgBounds.left) / imgBounds.width;
+        let y = (e.clientY - imgBounds.top) / imgBounds.height;
+
+        // Clamp to 0-1 range
         x = Math.max(0, Math.min(x, 1));
         y = Math.max(0, Math.min(y, 1));
+
         return { x, y };
+    };
+
+    // Convert relative coordinates to pixel coordinates (for display)
+    const relativeToPixel = (relativeRect) => {
+        return {
+            x1: relativeRect.x1 * imgSize.displayWidth,
+            y1: relativeRect.y1 * imgSize.displayHeight,
+            x2: relativeRect.x2 * imgSize.displayWidth,
+            y2: relativeRect.y2 * imgSize.displayHeight,
+            width: relativeRect.width * imgSize.displayWidth,
+            height: relativeRect.height * imgSize.displayHeight
+        };
+    };
+
+    // Convert relative coordinates to actual image pixel coordinates
+    const relativeToActualPixel = (relativeRect) => {
+        return {
+            x1: Math.round(relativeRect.x1 * imgSize.naturalWidth),
+            y1: Math.round(relativeRect.y1 * imgSize.naturalHeight),
+            x2: Math.round(relativeRect.x2 * imgSize.naturalWidth),
+            y2: Math.round(relativeRect.y2 * imgSize.naturalHeight),
+            width: Math.round(relativeRect.width * imgSize.naturalWidth),
+            height: Math.round(relativeRect.height * imgSize.naturalHeight)
+        };
     };
 
     // Global mouseup
@@ -101,18 +136,26 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
 
     const onMouseDown = (e) => {
         if (!imageBase64 || !drawEnabled) return;
+
+        e.preventDefault();
         const pos = getRelativePos(e);
 
-        // check if clicked inside any rectangle to start dragging
-        const clickedIndex = rectangles.findIndex(r => pos.x >= r.x1 && pos.x <= r.x2 && pos.y >= r.y1 && pos.y <= r.y2);
+        // Check if clicked inside any rectangle to start dragging
+        const clickedIndex = rectangles.findIndex(r =>
+            pos.x >= r.x1 && pos.x <= r.x2 && pos.y >= r.y1 && pos.y <= r.y2
+        );
+
         if (clickedIndex !== -1) {
             setDraggingIndex(clickedIndex);
-            setDragOffset({ x: pos.x - rectangles[clickedIndex].x1, y: pos.y - rectangles[clickedIndex].y1 });
+            setDragOffset({
+                x: pos.x - rectangles[clickedIndex].x1,
+                y: pos.y - rectangles[clickedIndex].y1
+            });
             setSelectedIndex(clickedIndex);
             return;
         }
 
-        // start drawing new rectangle
+        // Start drawing new rectangle
         setSelectedIndex(null);
         setIsDrawing(true);
         setStartPoint(pos);
@@ -121,9 +164,10 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
 
     const onMouseMove = (e) => {
         if (!imageBase64) return;
+
         const pos = getRelativePos(e);
 
-        // drawing new rectangle
+        // Drawing new rectangle
         if (isDrawing && startPoint) {
             const rect = {
                 x1: Math.min(startPoint.x, pos.x),
@@ -136,13 +180,15 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
             setCurrentRect(rect);
         }
 
-        // dragging existing rectangle
+        // Dragging existing rectangle
         if (draggingIndex !== null && dragOffset) {
             setRectangles(prev => {
                 return prev.map((r, i) => {
                     if (i !== draggingIndex) return r;
+
                     const newX1 = Math.max(0, Math.min(pos.x - dragOffset.x, 1 - r.width));
                     const newY1 = Math.max(0, Math.min(pos.y - dragOffset.y, 1 - r.height));
+
                     return {
                         ...r,
                         x1: newX1,
@@ -154,7 +200,7 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
             });
         }
 
-        // resizing existing rectangle
+        // Resizing existing rectangle
         if (isResizing && selectedIndex !== null && resizeDirection) {
             setRectangles(prev => {
                 return prev.map((r, i) => {
@@ -162,19 +208,26 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
 
                     let { x1, y1, x2, y2 } = r;
 
-                    if (resizeDirection.includes('e')) x2 = pos.x;
-                    if (resizeDirection.includes('s')) y2 = pos.y;
-                    if (resizeDirection.includes('w')) x1 = pos.x;
-                    if (resizeDirection.includes('n')) y1 = pos.y;
+                    // Apply resize based on direction
+                    if (resizeDirection.includes('e')) x2 = Math.max(x1 + 0.01, Math.min(pos.x, 1));
+                    if (resizeDirection.includes('s')) y2 = Math.max(y1 + 0.01, Math.min(pos.y, 1));
+                    if (resizeDirection.includes('w')) x1 = Math.max(0, Math.min(pos.x, x2 - 0.01));
+                    if (resizeDirection.includes('n')) y1 = Math.max(0, Math.min(pos.y, y2 - 0.01));
+
+                    // Ensure proper ordering
+                    const finalX1 = Math.min(x1, x2);
+                    const finalX2 = Math.max(x1, x2);
+                    const finalY1 = Math.min(y1, y2);
+                    const finalY2 = Math.max(y1, y2);
 
                     return {
                         ...r,
-                        x1: Math.min(x1, x2),
-                        y1: Math.min(y1, y2),
-                        x2: Math.max(x1, x2),
-                        y2: Math.max(y1, y2),
-                        width: Math.abs(x2 - x1),
-                        height: Math.abs(y2 - y1)
+                        x1: finalX1,
+                        y1: finalY1,
+                        x2: finalX2,
+                        y2: finalY2,
+                        width: finalX2 - finalX1,
+                        height: finalY2 - finalY1
                     };
                 });
             });
@@ -183,7 +236,15 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
 
     const onMouseUpContainer = () => {
         if (isDrawing && currentRect) {
-            setRectangles(prev => [...prev, { id: uuidv4(), ...currentRect }]);
+            setRectangles(prev => [
+                ...prev,
+                {
+                    id: uuidv4(),
+                    name: `Entity ${prev.length + 1}`,
+                    ...currentRect
+                }
+            ]);
+            setSelectedIndex(prev => prev === null ? rectangles.length : prev);
             setCurrentRect(null);
         }
         setIsDrawing(false);
@@ -193,7 +254,19 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
         setResizeDirection(null);
     };
 
-    // ----------- RETURN (unchanged except coordinate conversion) -----------
+    // Debug function to show actual pixel coordinates
+    const getActualCoordinates = (rect) => {
+        const actualCoords = relativeToActualPixel(rect);
+        console.log('Relative coordinates:', {
+            x1: rect.x1.toFixed(4),
+            y1: rect.y1.toFixed(4),
+            x2: rect.x2.toFixed(4),
+            y2: rect.y2.toFixed(4)
+        });
+        console.log('Actual pixel coordinates:', actualCoords);
+        return actualCoords;
+    };
+
     return (
         <div className="w-full flex-1 p-4 flex items-start justify-center">
             <div
@@ -205,29 +278,31 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
                 onMouseUp={onMouseUpContainer}
             >
                 {!imageBase64 ? (
-                    <div className="w-full h-96 flex items-center justify-center text-gray-400">Upload an image to start annotating</div>
+                    <div className="w-full h-96 flex items-center justify-center text-gray-400">
+                        Upload an image to start annotating
+                    </div>
                 ) : (
-                    <img src={imageBase64} alt="uploaded" style={{ display: 'block', width: '100%', height: 'auto' }} draggable={false}
+                    <img
+                        ref={imgRef}
+                        src={imageBase64}
+                        alt="uploaded"
+                        style={{ display: 'block', width: '100%', height: 'auto' }}
+                        draggable={false}
                         onDragStart={(e) => e.preventDefault()}
+                        onLoad={updateDisplaySize}
                     />
                 )}
 
-                {/* existing rectangles */}
+                {/* Existing rectangles */}
                 {!isPeekActive && rectangles.map((r, i) => {
-                    const pxRect = {
-                        x1: r.x1 * imgSize.width,
-                        y1: r.y1 * imgSize.height,
-                        width: r.width * imgSize.width,
-                        height: r.height * imgSize.height,
-                        x2: r.x2 * imgSize.width,
-                        y2: r.y2 * imgSize.height
-                    };
+                    const displayRect = relativeToPixel(r);
                     return (
                         <Rectangle
-                            key={i}
-                            r={pxRect}
+                            key={r.id || i}
+                            r={displayRect}
                             index={i}
                             onMouseDown={(e, idx, direction) => {
+                                e.preventDefault();
                                 const pos = getRelativePos(e);
                                 setSelectedIndex(idx);
                                 if (direction) {
@@ -235,7 +310,10 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
                                     setResizeDirection(direction);
                                 } else {
                                     setDraggingIndex(idx);
-                                    setDragOffset({ x: pos.x - rectangles[idx].x1, y: pos.y - rectangles[idx].y1 });
+                                    setDragOffset({
+                                        x: pos.x - rectangles[idx].x1,
+                                        y: pos.y - rectangles[idx].y1
+                                    });
                                 }
                             }}
                             isSelected={selectedIndex === i}
@@ -243,15 +321,15 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
                     );
                 })}
 
-                {/* current preview */}
+                {/* Current drawing preview */}
                 {currentRect && (
                     <div
                         style={{
                             position: 'absolute',
-                            left: `${currentRect.x1 * imgSize.width}px`,
-                            top: `${currentRect.y1 * imgSize.height}px`,
-                            width: `${currentRect.width * imgSize.width}px`,
-                            height: `${currentRect.height * imgSize.height}px`,
+                            left: `${currentRect.x1 * imgSize.displayWidth}px`,
+                            top: `${currentRect.y1 * imgSize.displayHeight}px`,
+                            width: `${currentRect.width * imgSize.displayWidth}px`,
+                            height: `${currentRect.height * imgSize.displayHeight}px`,
                             border: '2px dashed #2563eb',
                             backgroundColor: 'rgba(37,99,235,0.08)',
                             pointerEvents: 'none'
@@ -259,6 +337,21 @@ export default function Canvas({ imageBase64, rectangles, setRectangles, drawEna
                     />
                 )}
             </div>
+
+            {/* Debug info - you can remove this in production */}
+            {selectedIndex !== null && rectangles[selectedIndex] && (
+                <div className="fixed bottom-4 right-4 bg-black text-white p-2 rounded text-xs max-w-xs">
+                    <div>Selected Rectangle #{selectedIndex + 1}</div>
+                    <div>Relative: ({rectangles[selectedIndex].x1.toFixed(3)}, {rectangles[selectedIndex].y1.toFixed(3)}) to ({rectangles[selectedIndex].x2.toFixed(3)}, {rectangles[selectedIndex].y2.toFixed(3)})</div>
+                    <div>Actual Pixels:
+                        {(() => {
+                            const actual = relativeToActualPixel(rectangles[selectedIndex]);
+                            return `(${actual.x1}, ${actual.y1}) to (${actual.x2}, ${actual.y2})`;
+                        })()}
+                    </div>
+                    <div>Image: {imgSize.naturalWidth}x{imgSize.naturalHeight} → {Math.round(imgSize.displayWidth)}x{Math.round(imgSize.displayHeight)}</div>
+                </div>
+            )}
         </div>
     );
 }
