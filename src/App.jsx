@@ -1,19 +1,27 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// Layout
+import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
+
+// Pages
 import Home from './pages/Home';
-import Editor from './pages/Editor';
-import Navbar from './components/Navbar';
 import AboutUs from './pages/AboutUs';
-import ContactUs from './pages/ContactUs';
 import Pricing from './pages/Pricing';
 import Support from './pages/Support';
-import Footer from './components/Footer';
+import ContactUs from './pages/ContactUs';
 import Documentation from './pages/Documentation';
-import Auth from "./pages/Auth";
-import Dashboard from './pages/Dashboard';
+
+// Features
+import Auth from './features/auth/Auth';
+import Dashboard from './features/dashboard/Dashboard';
+import Editor from './features/editor/Editor';
+
 
 export default function App() {
   return (
+
     <Router>
       <Navbar />
       <Routes>
