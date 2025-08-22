@@ -21,12 +21,14 @@ export const saveData = async (payload) => {
 
 export const detectEntities = async (imageBase64, imageNaturalSize) => {
     try {
-        const testingData = "bfibjhefiwb234u918129038120933"
+        // const testingData = "bfibjhefiwb234u918129038120933"
         const res = await fetch(`${BASE_URL}/detect-entities`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                image: testingData,
+                // image: testingData,
+                image: imageBase64,
+                imageNaturalSize: imageNaturalSize
             })
         });
 
