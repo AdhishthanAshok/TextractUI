@@ -3,7 +3,7 @@ import Toolbar from './components/Toolbar';
 import Canvas from './components/Canvas';
 import PropertiesPanel from './components/PropertiesPanel';
 import { fileToDataUrl } from '../../utils/imageUtils';
-import EntityValueTable from "../../components/common/EntityValueTable"; // Updated path
+import EntityValueTable from "../../components/common/EntityValueTable";
 import Swal from 'sweetalert2';
 import { saveData, detectEntities } from '../../api/editorService';
 import { useEditorHotkeys } from './hooks/useEditorHotkeys';
@@ -50,6 +50,28 @@ const Editor = () => {
         };
     };
 
+    /**
+     * NEW: Converts absolute pixel coordinates (from API) to relative (0-1) coordinates.
+     * This is the key function to fix the issue.
+     */
+    const convertActualToRelativePixels = (actualRect) => {
+        const { width: naturalWidth, height: naturalHeight } = imageNaturalSize;
+        if (!naturalWidth || !naturalHeight) return null; // Avoid division by zero if image isn't loaded
+
+        return {
+            ...actualRect, // Keep id, name, etc.
+            x1: actualRect.x1 / naturalWidth,
+            y1: actualRect.y1 / naturalHeight,
+            x2: actualRect.x2 / naturalWidth,
+            y2: actualRect.y2 / naturalHeight,
+            width: actualRect.width / naturalWidth,
+            height: actualRect.height / naturalHeight,
+        };
+    };
+
+    /**
+     * Converts relative (0-1) coordinates (from drawing) to absolute pixel coordinates for the backend.
+     */
     const convertToActualPixels = (relativeRect) => {
         return {
             id: relativeRect.id,
@@ -71,7 +93,6 @@ const Editor = () => {
                 text: 'Please upload an image and draw at least one rectangle.',
             });
         }
-
         const updatedRectangles = rectangles.map((rect, index) => {
             const rectWithName = {
                 ...rect,
@@ -79,12 +100,10 @@ const Editor = () => {
             };
             return convertToActualPixels(rectWithName);
         });
-
         setRectangles(rectangles.map((rect, index) => ({
             ...rect,
             name: rect.name?.trim() ? rect.name : `Entity ${index + 1}`
         })));
-
         const payload = {
             data: {
                 image: {
@@ -96,7 +115,6 @@ const Editor = () => {
                 rectangles: updatedRectangles
             }
         };
-
         try {
             const data = await saveData(payload);
             setTableData(data);
@@ -156,10 +174,16 @@ const Editor = () => {
                 text: "Please upload an image first."
             });
         }
-
         try {
             const data = await detectEntities(imageBase64, imageNaturalSize);
-            setRectangles(data.rectangles);
+
+            // *** THE FIX: Convert API response to relative coordinates before setting state ***
+            const relativeRects = data.rectangles
+                .map(convertActualToRelativePixels)
+                .filter(Boolean); // .filter(Boolean) removes any nulls if image size wasn't ready
+
+            setRectangles(prev => [...prev, ...relativeRects]);
+
         } catch (err) {
             Swal.fire({
                 icon: "error",
@@ -203,7 +227,6 @@ const Editor = () => {
                             isPeekActive={isPeekActive}
                         />
                     </section>
-
                     <aside className="lg:w-1/4 w-full sticky top-24 self-start">
                         <PropertiesPanel
                             selectedIndex={selectedIndex}
@@ -215,7 +238,6 @@ const Editor = () => {
                         />
                     </aside>
                 </div>
-
                 {tableData && (
                     <section ref={tableRef}>
                         <EntityValueTable data={tableData} />
