@@ -175,7 +175,7 @@ const Editor = () => {
             });
         }
         try {
-            const data = await detectEntities(imageBase64, imageNaturalSize);
+            const data = await detectEntities(imageBase64, imageType);
 
             // *** THE FIX: Convert API response to relative coordinates before setting state ***
             const relativeRects = data.rectangles
