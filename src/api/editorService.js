@@ -22,7 +22,6 @@ export const saveData = async (payload) => {
 export const detectEntities = async (imageBase64, imageType, timeout = 120000) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-    console.log("API Called with timeout limit : ", timeout)
     try {
         const res = await fetch(`${BASE_URL}/detect-entities`, {
             method: "POST",
@@ -33,12 +32,11 @@ export const detectEntities = async (imageBase64, imageType, timeout = 120000) =
             }),
             signal: controller.signal
         });
-        console.log("PAYLOAD : ", imageBase64, imageType)
         clearTimeout(timeoutId); // clear if successful
 
         const data = await res.json();
         console.log("Data : ", imageBase64, imageType)
-        if (!data) {
+        if (!data.status) {
             throw new Error(data.message || "Detection failed");
         }
         return data;
