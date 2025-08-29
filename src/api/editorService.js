@@ -19,18 +19,22 @@ export const saveData = async (payload) => {
     }
 };
 
-export const detectEntities = async (imageBase64, imageType) => {
+export const detectEntities = async (imageBase64, imageType, timeout = 120000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
     try {
-        // const testingData = "bfibjhefiwb234u918129038120933"
         const res = await fetch(`${BASE_URL}/detect-entities`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                // image: testingData,
                 image_base64: imageBase64,
                 image_type: imageType
-            })
+            }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId); // clear if successful
 
         const data = await res.json();
         if (!data.status) {
@@ -38,6 +42,13 @@ export const detectEntities = async (imageBase64, imageType) => {
         }
         return data;
     } catch (err) {
+        clearTimeout(timeoutId); // ensure timeout is cleared on any error
+
+        if (err.name === "AbortError") {
+            console.error("Request timed out after 2 minutes");
+            throw new Error("Request timed out after 2 minutes");
+        }
+
         console.error(err);
         throw err;
     }
