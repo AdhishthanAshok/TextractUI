@@ -178,7 +178,7 @@ const Editor = () => {
             const data = await detectEntities(imageBase64, imageType, 180000);
 
             // *** THE FIX: Convert API response to relative coordinates before setting state ***
-            const relativeRects = data.rectangles
+            const relativeRects = data
                 .map(convertActualToRelativePixels)
                 .filter(Boolean); // .filter(Boolean) removes any nulls if image size wasn't ready
 
