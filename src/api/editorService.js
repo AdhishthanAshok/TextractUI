@@ -19,7 +19,7 @@ export const saveData = async (payload) => {
     }
 };
 
-export const detectEntities = async (imageBase64, imageNaturalSize) => {
+export const detectEntities = async (imageBase64, imageType) => {
     try {
         // const testingData = "bfibjhefiwb234u918129038120933"
         const res = await fetch(`${BASE_URL}/detect-entities`, {
@@ -27,8 +27,8 @@ export const detectEntities = async (imageBase64, imageNaturalSize) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 // image: testingData,
-                image: imageBase64,
-                imageNaturalSize: imageNaturalSize
+                image_base64: imageBase64,
+                image_type: imageType
             })
         });
 
