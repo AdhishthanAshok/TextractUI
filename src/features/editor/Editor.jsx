@@ -7,7 +7,7 @@ import EntityValueTable from "../../components/common/EntityValueTable";
 import Swal from 'sweetalert2';
 import { saveData, detectEntities } from '../../api/editorService';
 import { useEditorHotkeys } from './hooks/useEditorHotkeys';
-import Loader from '../../components/common/loader';
+import Loader from '../../components/common/Loader';
 
 const Editor = () => {
     const [imageBase64, setImageBase64] = useState(null);
