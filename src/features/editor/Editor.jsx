@@ -7,6 +7,7 @@ import EntityValueTable from "../../components/common/EntityValueTable";
 import Swal from 'sweetalert2';
 import { saveData, detectEntities } from '../../api/editorService';
 import { useEditorHotkeys } from './hooks/useEditorHotkeys';
+import Loader from '../../components/common/loader';
 
 const Editor = () => {
     const [imageBase64, setImageBase64] = useState(null);
@@ -18,6 +19,7 @@ const Editor = () => {
     const [tableData, setTableData] = useState(null);
     const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
     const tableRef = useRef(null);
+    const [showLoader, setShowLoader] = useState(false);
 
     const { handleDelete } = useEditorHotkeys({
         rectangles, setRectangles,
@@ -93,6 +95,7 @@ const Editor = () => {
                 text: 'Please upload an image and draw at least one rectangle.',
             });
         }
+        setShowLoader(true);
         const updatedRectangles = rectangles.map((rect, index) => {
             const rectWithName = {
                 ...rect,
@@ -118,16 +121,24 @@ const Editor = () => {
         try {
             const data = await saveData(payload);
             setTableData(data);
+            if (data) {
+                setShowLoader(false);
+            }
             Swal.fire({
+                toast: true,
+                position: 'top-end',
                 icon: 'success',
-                title: 'Success',
-                text: 'Submitted successfully',
+                title: 'Processed successfully',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
             }).then(() => {
                 setTimeout(() => {
                     tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 200);
             });
         } catch (err) {
+            setShowLoader(false);
             Swal.fire({
                 icon: 'error',
                 title: 'Submission Failed',
@@ -140,7 +151,7 @@ const Editor = () => {
         if (rectangles.length === 0) return;
         Swal.fire({
             title: 'Are you sure?',
-            text: "This will remove all drawn rectangles.",
+            text: "This will remove all drawn Entities.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -174,9 +185,12 @@ const Editor = () => {
                 text: "Please upload an image first."
             });
         }
+        setShowLoader(true);
         try {
             const data = await detectEntities(imageBase64, imageType, 180000);
-
+            if (data) {
+                setShowLoader(false);
+            }
             // *** THE FIX: Convert API response to relative coordinates before setting state ***
             const relativeRects = data.rectangles
                 .map(convertActualToRelativePixels)
@@ -184,7 +198,17 @@ const Editor = () => {
 
             setRectangles(prev => [...prev, ...relativeRects]);
 
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Detected successfully',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            })
         } catch (err) {
+            setShowLoader(false);
             Swal.fire({
                 icon: "error",
                 title: "Error",
@@ -195,6 +219,11 @@ const Editor = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-800">
+            {
+                showLoader && (
+                    <Loader />
+                )
+            }
             <header className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <Toolbar

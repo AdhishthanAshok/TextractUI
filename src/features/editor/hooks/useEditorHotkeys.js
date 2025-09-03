@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useHotkeys } from '../../../hooks/useHotkeys'; // The generic hotkey hook
 import { v4 as uuidv4 } from 'uuid';
+import Swal from 'sweetalert2';
 
 // A simple hook to manage undo/redo state
 const useUndoRedo = (initialState) => {
@@ -80,6 +81,15 @@ export const useEditorHotkeys = ({
         if (typeof selectedIndex !== 'number') return;
         setRectangles(prev => prev.filter((_, i) => i !== selectedIndex));
         setSelectedIndex(null);
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Deleted!',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true,
+        });
     }, [selectedIndex, setRectangles, setSelectedIndex]);
 
     const handleCopy = useCallback(() => {
@@ -101,14 +111,6 @@ export const useEditorHotkeys = ({
         setRectangles(prev => [...prev, newRect]);
         setSelectedIndex(rectangles.length);
     }, [clipboard, rectangles.length, setRectangles, setSelectedIndex]);
-
-    const handleDeselect = useCallback(() => {
-        setSelectedIndex(null);
-    }, [setSelectedIndex]);
-
-    const handleToggleDraw = useCallback(() => {
-        setDrawEnabled(prev => !prev);
-    }, [setDrawEnabled]);
 
     const moveOrResize = useCallback((dx, dy, isResize = false, isShift = false) => {
         if (selectedIndex === null) return;
@@ -140,8 +142,6 @@ export const useEditorHotkeys = ({
     const hotkeys = [
         // Basic Actions
         { key: 'Delete', callback: handleDelete },
-        { key: 'Escape', callback: handleDeselect },
-        { key: 'd', callback: handleToggleDraw },
 
         // Clipboard
         { key: 'c', ctrlKey: true, callback: handleCopy },
@@ -152,10 +152,10 @@ export const useEditorHotkeys = ({
         { key: 'y', ctrlKey: true, callback: handleRedo },
 
         // Move Rectangle (nudge)
-        { key: 'ArrowUp', callback: () => moveOrResize(0, -0.005) },
-        { key: 'ArrowDown', callback: () => moveOrResize(0, 0.005) },
-        { key: 'ArrowLeft', callback: () => moveOrResize(-0.005, 0) },
-        { key: 'ArrowRight', callback: () => moveOrResize(0.005, 0) },
+        // { key: 'ArrowUp', ctrlKey: true, callback: () => moveOrResize(0, -0.005) },
+        // { key: 'ArrowDown', ctrlKey: true, callback: () => moveOrResize(0, 0.005) },
+        // { key: 'ArrowLeft', ctrlKey: true, callback: () => moveOrResize(-0.005, 0) },
+        // { key: 'ArrowRight', ctrlKey: true, callback: () => moveOrResize(0.005, 0) },
 
     ];
 
